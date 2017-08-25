@@ -1,0 +1,11 @@
+*.pyc
+*.log
+.idea/
+*.png
+*.txt
+*.ttc
+*.json
+*.pid
+:w:
+*.rdb
+*.xls

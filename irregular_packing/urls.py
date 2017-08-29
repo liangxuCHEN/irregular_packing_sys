@@ -15,7 +15,20 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from packing import views
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns, static
+from django.conf import settings
+
 
 urlpatterns = [
+    url(r'^$', views.home_page, name='index'),
+    url(r'^dxf_models$', views.DxfModelIndexView.as_view(), name='dxf_index'),
+    url(r'^add_dxf_model$', views.add_dxf_model, name='add_dxf_model'),
+    url(r'^calc_shape_num$', views.calc_shape_num, name='calc_shape_num'),
     url(r'^admin/', admin.site.urls),
 ]
+
+urlpatterns += staticfiles_urlpatterns()
+
+# urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

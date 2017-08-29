@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}异形排布{% endblock %}
+{% block content %}
+{% if info %}
+<p>{{info}}</p>
+{% endif %}
+<form action="/add_dxf_model" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value = "提交"/>
+</form>
+{% endblock %}

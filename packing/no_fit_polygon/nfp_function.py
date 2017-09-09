@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from tools import placement_worker, nfp_utls
+import time
+import os
 import math
 import json
 import random
@@ -11,10 +13,11 @@ import pyclipper
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from settings import SPACING, ROTATIONS, BIN_HEIGHT, POPULATION_SIZE, MUTA_RATE
+from irregular_packing import settings as django_settings
 
 
 class Nester:
-    def __init__(self, container=None, shapes=None):
+    def __init__(self, container=None, shapes=None, border=None, rotations=None):
         """Nester([container,shapes]): Creates a nester object with a container
            shape and a list of other shapes to nest into it. Container and
            shapes must be Part.Faces.
@@ -33,8 +36,8 @@ class Nester:
         # 遗传算法的参数
         self.config = {
             'curveTolerance': 0.3,  # 允许的最大误差转换贝济耶和圆弧线段。在SVG的单位。更小的公差将需要更长的时间来计算
-            'spacing': SPACING,           # 组件间的间隔
-            'rotations': ROTATIONS,         # 旋转的颗粒度，360°的n份，如：4 = [0, 90 ,180, 270]
+            'spacing': border or SPACING,           # 组件间的间隔
+            'rotations': rotations or ROTATIONS,         # 旋转的颗粒度，360°的n份，如：4 = [0, 90 ,180, 270]
             'populationSize': POPULATION_SIZE,    # 基因群数量
             'mutationRate': MUTA_RATE,      # 变异概率
             'useHoles': False,       # 是否有洞，暂时都是没有洞
@@ -72,9 +75,9 @@ class Nester:
             self.shapes.append(shape)
 
         # 如果是一般布，需要这个尺寸
-        self.shapes_max_length = total_area / BIN_HEIGHT * 3
+        self.shapes_max_length = total_area / BIN_HEIGHT * 10
 
-    def add_container(self, container):
+    def add_container(self, container, limited=True):
         """add_container(object): adds a polygon objects as the container"""
         if not self.container:
             self.container = {}
@@ -100,6 +103,7 @@ class Nester:
 
         self.container['width'] = xbinmax - xbinmin
         self.container['height'] = ybinmax - ybinmin
+        self.container['limited'] = limited
         # 最小包络多边形
         self.container_bounds = nfp_utls.get_polygon_bounds(self.container['points'])
 
@@ -371,7 +375,7 @@ class Nester:
         return clean
 
 
-def draw_result(shift_data, polygons, bin_polygon, bin_bounds):
+def draw_result(shift_data, polygons, bin_polygon, bin_bounds, save_img=False):
     """
     从结果中得到平移旋转的数据，把原始图像移到到目标地方，然后保存结果
     :param shift_data: 平移旋转数据
@@ -380,6 +384,8 @@ def draw_result(shift_data, polygons, bin_polygon, bin_bounds):
     :param bin_bounds:
     :return:
     """
+    # 若是无限长材料需要返回用料长度
+    max_width = 0
     # 生产多边形类
     shapes = list()
     for polygon in polygons:
@@ -387,27 +393,53 @@ def draw_result(shift_data, polygons, bin_polygon, bin_bounds):
         shapes.append(Polygon(contour))
 
     bin_shape = Polygon([[p['x'], p['y']] for p in bin_polygon['points']])
-    shape_area = bin_shape.area(0)
 
+    # shape_area = bin_shape.area(0)
     solution = list()
-    rates = list()
     for s_data in shift_data:
         # 一个循环代表一个容器的排版
         tmp_bin = list()
         total_area = 0.0
         for move_step in s_data:
-            if move_step['rotation'] <> 0:
+            if move_step['rotation'] != 0:
                 # 坐标原点旋转
                 shapes[int(move_step['p_id'])].rotate(math.pi / 180 * move_step['rotation'], 0, 0)
             # 平移
             shapes[int(move_step['p_id'])].shift(move_step['x'], move_step['y'])
             tmp_bin.append(shapes[int(move_step['p_id'])])
             total_area += shapes[int(move_step['p_id'])].area(0)
-        # 当前排版的利用率
-        rates.append(total_area / shape_area)
         solution.append(tmp_bin)
+
+    # 无限长的材料，需要找到最大的X坐标
+    if not bin_polygon['limited']:
+        for shape in shapes:
+            for p in shape.contour(0):
+                if max_width < p[0]:
+                    max_width = p[0]
+
+        # 重新生成BIN
+        contour = list()
+        for p in bin_polygon['points']:
+            if p['x'] > max_width:
+                p['x'] = max_width
+            contour.append([p['x'], p['y']])
+        bin_shape = Polygon(contour)
+        bin_bounds['width'] = max_width
+
     # 显示结果
-    draw_polygon(solution, rates, bin_bounds, bin_shape)
+    file_name = '/'
+    if save_img:
+        file_name = os.path.join('static', 'imgs', str(time.time()).split('.')[0])
+        file_name = '%s.png' % file_name
+        path = os.path.join(django_settings.BASE_DIR, file_name)
+        draw_polygon(solution, bin_bounds, bin_shape, path)
+    else:
+        draw_polygon_show(solution, bin_bounds, bin_shape)
+    return {
+        'use_width': max_width,
+        'areas': bin_bounds['height']*bin_bounds['width'] * len(solution),
+        'file_name': file_name
+    }
 
 
 class genetic_algorithm():
@@ -477,10 +509,10 @@ class genetic_algorithm():
         for i in range(0, len(clone['placement'])):
             if random.random() < 0.01 * self.config['mutationRate']:
                 if i+1 < len(clone['placement']):
-                    clone['placement'][i],clone['placement'][i+1] = clone['placement'][i+1], clone['placement'][i]
+                    clone['placement'][i], clone['placement'][i+1] = clone['placement'][i+1], clone['placement'][i]
 
-        if random.random() < 0.01 * self.config['mutationRate']:
-            clone['rotation'][i] = self.random_angle(clone['placement'][i])
+                    clone['rotation'][i] = self.random_angle(clone['placement'][i])
+                    clone['rotation'][i+1] = self.random_angle(clone['placement'][i+1])
         return clone
 
     def generation(self):
@@ -499,7 +531,6 @@ class genetic_algorithm():
             if len(new_population) < self.config['populationSize']:
                 new_population.append(self.mutate(children[1]))
 
-        print 'new :', new_population
         self.population = new_population
 
     def random_weighted_individual(self, exclude=None):
@@ -604,7 +635,7 @@ def draw_polygon_png(solution, bin_bounds, bin_shape, path=None):
     fig1.savefig('%s.png' % path)
 
 
-def draw_polygon(solution, rates, bin_bounds, bin_shape):
+def draw_polygon_show(solution, bin_bounds, bin_shape):
     base_width = 8
     base_height = base_width * bin_bounds['height'] / bin_bounds['width']
     num_bin = len(solution)
@@ -619,7 +650,7 @@ def draw_polygon(solution, rates, bin_bounds, bin_shape):
         # 坐标设置
         ax = plt.subplot(num_bin, 1, i_pic, aspect='equal')
         # ax = fig1.set_subplot(num_bin, 1, i_pic, aspect='equal')
-        ax.set_title('Num %d bin, rate is %0.4f' % (i_pic, rates[i_pic-1]))
+        ax.set_title('Num %d bin' % i_pic)
         i_pic += 1
         ax.set_xlim(bin_bounds['x'] - 10, bin_bounds['width'] + 50)
         ax.set_ylim(bin_bounds['y'] - 10, bin_bounds['height'] + 50)
@@ -634,6 +665,34 @@ def draw_polygon(solution, rates, bin_bounds, bin_shape):
     # fig1.save()
 
 
+def draw_polygon(solution, bin_bounds, bin_shape, path):
+    base_width = 8
+    base_height = base_width * int((float(bin_bounds['height']) / bin_bounds['width'] + 1))
+    num_bin = len(solution)
+    fig_height = num_bin * base_height
+    fig1 = Figure(figsize=(base_width, fig_height))
+    FigureCanvas(fig1)
+    fig1.suptitle('Polygon packing', fontweight='bold')
+
+    i_pic = 1  # 记录图片的索引
+    for shapes in solution:
+        # 坐标设置
+        ax = fig1.add_subplot(num_bin, 1, i_pic, aspect='equal')
+        ax.set_title('Num %d bin' % i_pic)
+        i_pic += 1
+        ax.set_xlim(bin_bounds['x'] - 10, bin_bounds['width'] + 50)
+        ax.set_ylim(bin_bounds['y'] - 10, bin_bounds['height'] + 50)
+
+        output_obj = list()
+        output_obj.append(patches.Polygon(bin_shape.contour(0), fc='green'))
+        for s in shapes:
+            output_obj.append(patches.Polygon(s.contour(0), fc='yellow', lw=1, edgecolor='m'))
+        for p in output_obj:
+            ax.add_patch(p)
+
+    fig1.savefig(path)
+
+
 def content_loop_rate(best, n, loop_time=20, save_img=False):
     """
     固定迭代次数
@@ -644,19 +703,21 @@ def content_loop_rate(best, n, loop_time=20, save_img=False):
     """
     res = best
     run_time = loop_time
+    total_shape = len(n.shapes)
     while run_time:
         n.run()
         best = n.best
         print best['fitness']
-        if best['fitness'] <= res['fitness']:
+        if best['fitness'] < res['fitness']:
             res = best
             print 'change', res['fitness']
+
+        if sum([len(place) for place in res['placements']]) < total_shape:
+            print 'not all place'
+            continue
         run_time -= 1
 
-    if save_img:
-        draw_result(res['placements'], n.shapes, n.container, n.container_bounds)
-
-    return 'OK'
+    return draw_result(res['placements'], n.shapes, n.container, n.container_bounds, save_img=save_img)
 
 
 def set_target_loop(best, nest):

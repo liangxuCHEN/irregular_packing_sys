@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}添加series任务{% endblock %}
+{% block content %}
+<div class="jumbotron">
+<p>计算模型的图形数量</p>
+<p>输入例子:[{"Guid":"8887D88A-FB77-87BA-7777-EDF7777E78CC", "Amount":4},{"Guid":"8887D88A-FB87-87AA-7677-EDF7777E78CC", "Amount":2}]</p>
+<form method="post" action="{% url 'calc_shape_num' %}">
+    {% csrf_token %}
+    <textarea rows="4" cols="50" name="job_data" placeholder="json数据">{{ works }}</textarea><br>
+    <input type="submit" value="提交" />
+</form>
+</div>
+
+<div class="jumbotron">
+<p>计算模型图像排列用量</p>
+<p>输入例子:[{"Guid":"8887D88A-FB77-87BA-7777-EDF7777E78CC", "Amount":1, "Route":1},{"Guid":"8887D88A-FB87-87AA-7677-EDF7777E78CC", "Amount":1, "Route":0}]</p>
+<form method="post" action="{% url 'calc_shape_use' %}">
+    {% csrf_token %}
+    <textarea rows="4" cols="50" name="job_data" placeholder="json数据">{{ works }}</textarea><br>
+    <label>间距：</label><input type="number" name="border" min="0" value="3"/><br/>
+    <input type="radio" name="loop" value="primary"/>初级优化<br/>
+    <input type="radio" name="loop" value="middle"/>中级优化<br/>
+    <input type="radio" name="loop" value="high"/>高级优化<br/>
+    <input type="submit" value="提交" />
+</form>
+</div>
+{% endblock %}

@@ -21,22 +21,6 @@ def home_page(request):
     return render(request, 'index.html')
 
 
-def upload_file(request):
-    """
-    上传模型文档（dxf格式）
-    :param request:
-    :return:
-    """
-    if request.method == 'POST':
-        created = dt.today().strftime('-%Y_%m_%d_%H_%M_%S')
-        l_file = request.FILES.get('learn_file')
-        if l_file:
-            path = os.path.join(settings.BASE_DIR, 'static', 'dxf_files', str(l_file)+created)
-            handle_uploaded_file(l_file, path)
-
-    return HttpResponseRedirect('/model_list')
-
-
 class DxfModelIndexView(generic.ListView):
     model = DxfModel
     template_name = "dxf_index.html"
@@ -49,31 +33,65 @@ def add_dxf_model(request):
         form = DxfForm(request.POST, request.FILES)
         if form.is_valid():
             dxf_model = form.save()
-            # print dxf_model.uploads.url
-            # print dxf_model.uploads.path
             try:
                 s = input_utls.input_polygon(dxf_model.uploads.path)
-                return HttpResponse(json.dumps({'num_shape': len(s)}, ensure_ascii=False), content_type="application/json")
+                content = json.dumps({
+                    'data': {'num_shape': len(s)},
+                    'status': 0,
+                    'message': 'OK'
+                }, ensure_ascii=False)
+                return HttpResponse(content, content_type="application/json")
             except:
                 return HttpResponse(json.dumps({'info': u'读取文件出错'}), content_type="application/json")
         else:
+            print form.errors
             return render(request, 'add_dxf_model.html', {'info': u'缺少文件'})
     else:
-        form = DxfForm()
-        return render(request, 'add_dxf_model.html', {'form': form})
+        form = DxfForm(initial={
+            "material_guid":  request.GET.get('material_guid'),
+            'model_guid': request.GET.get('model_guid')
+        })
+        content = {
+            'form': form
+        }
+        return render(request, 'add_dxf_model.html', content)
 
 
 def calc_shape_num(request):
     if request.method == 'POST':
         res = shape_num(request.POST)
-        return HttpResponse(json.dumps(res, ensure_ascii=False), content_type="application/json")
+        if res['is_error']:
+            content = json.dumps({
+                'data': '',
+                'status': 0,
+                'message': res['error_info']
+            }, ensure_ascii=False)
+        else:
+            content = json.dumps({
+                'data': res['data'],
+                'status': 0,
+                'message': 'OK'
+            }, ensure_ascii=False)
+        return HttpResponse(content, content_type="application/json")
     else:
-        return render(request, 'calc_shape_num.html')
+        return render(request, 'calc_shape.html')
 
 
 def calc_shape_use(request):
     if request.method == 'POST':
         res = shape_use(request.POST)
-        return HttpResponse(json.dumps(res, ensure_ascii=False), content_type="application/json")
+        if res['is_error']:
+            content = json.dumps({
+                'data': '',
+                'status': 0,
+                'message': res['error_info']
+            }, ensure_ascii=False)
+        else:
+            content = json.dumps({
+                'data': res['data'],
+                'status': 0,
+                'message': 'OK'
+            }, ensure_ascii=False)
+        return HttpResponse(content, content_type="application/json")
     else:
-        return render(request, 'calc_shape_use.html')
+        return render(request, 'calc_shape.html')

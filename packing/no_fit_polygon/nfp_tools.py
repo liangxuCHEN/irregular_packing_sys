@@ -9,9 +9,8 @@ from sql import material_info
 
 def data_check(data):
     try:
-        print data
+        # 前端控制输入的字段
         input_data = json.loads(data['job_data'])
-
         return {'is_error': False, 'data': input_data}
     except:
         return {'is_error': True, 'error_info': u'json结构解析出错'}
@@ -28,8 +27,15 @@ def shape_num(data):
         from packing.models import DxfModel
         total_num = 0
         for input_data in res['data']:
-            dxf_model = DxfModel.objects.filter(model_guid=input_data['Guid']).first()
-            total_num += len(input_utls.input_polygon(dxf_model.uploads.path)) * input_data['Amount']
+            # TODO: 参数的值合理性判断
+            if input_data.get('Guid') and input_data.get('Amount'):
+                dxf_model = DxfModel.objects.filter(model_guid=input_data['Guid']).first()
+                if dxf_model:
+                    total_num += len(input_utls.input_polygon(dxf_model.uploads.path)) * input_data['Amount']
+                else:
+                    return {'is_error': True, 'error_info': u'模型{}没有找到'.format(input_data['Guid'])}
+            else:
+                return {'is_error': True, 'error_info': u'数据缺少参数 Guid 或 Amount'}
         return {'is_error': False, 'data': {'total_num': total_num}}
 
 
@@ -54,7 +60,7 @@ def shape_use(data):
             routing = 8
         else:
             loop_time = 90
-            routing = 8
+            routing = 16
 
         # 间距
         border = data.get('border')
@@ -100,7 +106,7 @@ def shape_use(data):
                         BIN_NORMAL[1][1] = material['width']
                         BIN_NORMAL[2][1] = material['width']
 
-                    # 选择面布, 单位是米==无限长，平方或其他==固定大小的面料
+                    # 选择bin, 单位是米==无限长，平方或其他==固定大小的面料
                     print BIN_NORMAL
                     if material['unit'] == '米':
                         material_dict[dxf_model.material_guid]['nesting'].add_container(BIN_NORMAL, limited=False)
@@ -108,9 +114,10 @@ def shape_use(data):
                         material_dict[dxf_model.material_guid]['nesting'].add_container(BIN_CUT_BIG)
 
         # 设计退出条件
-
         for key, value in material_dict.items():
+            # 启动运算
             value['nesting'].run()
+            # 固定循环次数，找最优解
             value.update(content_loop_rate(value['nesting'].best, value['nesting'],
                                            loop_time=int(loop_time), save_img=True))
             value.pop('nesting')
@@ -119,6 +126,7 @@ def shape_use(data):
                 value['total_price'] = float(value['use_width']) / 1000 * value['price']
             else:
                 value['unit'] = 'psc'
+                # 1英尺平方 == 92903.04毫米平方
                 value['total_price'] = (int(value['areas'] / 92903.04)+1) * value['price']
         return {'is_error': False, 'data': material_dict}
 

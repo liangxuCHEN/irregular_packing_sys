@@ -135,7 +135,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-# from mrq.context import setup_context, get_current_config
-#
-# if not get_current_config():
-#     setup_context()
+from mrq.context import setup_context, get_current_config
+
+if not get_current_config():
+    setup_context()

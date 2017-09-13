@@ -16,6 +16,9 @@ from packing.no_fit_polygon.nfp_tools import shape_num, shape_use
 from tasks.package import PackingTask
 from packing.no_fit_polygon.sql import jobs_list
 
+from mrq.job import queue_job, Job
+
+
 def allow_all(response):
     """
     解决跨域的问题
@@ -145,9 +148,11 @@ def calc_shape_use(request):
 @csrf_exempt
 def shape_use_task(request):
     if request.method == 'POST':
-        task = PackingTask()
-        res = task.run(request.POST)
-        response = HttpResponse(json.dumps(res), content_type="application/json")
+        taskparams = dict()
+        taskparams['post_data'] = request.POST
+        job_id = queue_job("tasks.package.PackingTask", taskparams)
+        print job_id
+        response = HttpResponse(json.dumps({'job_id': str(job_id)}), content_type="application/json" )
     else:
         response = render(request, 'calc_shape.html')
 

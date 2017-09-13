@@ -108,6 +108,8 @@ def jobs_list():
     sql_text = """SELECT Guid, Url, Status, TotalPrice, CreateDate, UpdateDate FROM %s""" % JOB_STATE_TABLE
     df = pd.io.sql.read_sql(sql_text, con=conn)
     df['Guid'] = df['Guid'].astype(str)
+    df['CreateDate'] = df['CreateDate'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
+    df['UpdateDate'] = df['UpdateDate'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
     return df.to_json(orient='records')
 
 

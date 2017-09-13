@@ -132,7 +132,7 @@ def copy_same_job(old_job, new_data):
     new_guid = uuid.uuid4()
     sql_text = "insert into %s values ('%s','%s','%s','%s','%s','%s','%s', '%f')" % (
         JOB_STATE_TABLE, new_guid, new_data['comment'], old_job['url'], new_data['data'],
-        old_job['Status'], created.strftime('%Y-%m-%d %H:%M:%S'), created.strftime('%Y-%m-%d %H:%M:%S'),
+        old_job['status'], created.strftime('%Y-%m-%d %H:%M:%S'), created.strftime('%Y-%m-%d %H:%M:%S'),
         old_job['total_price'])
     conn.exec_non_query(sql_text)
 

@@ -6,7 +6,7 @@ from packing.no_fit_polygon.sql import has_same_job, copy_same_job, insert_new_j
     update_job_status, insert_job_result
 
 FINISH_STATUS = u'运算结束'
-HOST_URL = 'http://127.0.0.1:8000'
+HOST_URL = 'http://192.168.126.129:8585/'
 
 
 def save_project(Project_model, PackDetail_model, result, input_data):

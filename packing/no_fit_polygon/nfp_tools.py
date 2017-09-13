@@ -71,7 +71,10 @@ def shape_use(data):
         material_dict = dict()
         for input_data in res['data']:
             # 确保整形
-            input_data['Amount'] = int(input_data['Amount'])
+            amount = input_data.get('Amount') or 0
+            if amount == 0:
+                return {'is_error': True, 'data': input_data, 'error_info': u'Without Amount'}
+            input_data['Amount'] = int(amount)
 
             dxf_model = DxfModel.objects.filter(model_guid=input_data['Guid']).first()
             shapes = input_utls.input_polygon(dxf_model.uploads.path)

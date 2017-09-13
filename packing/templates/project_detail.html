@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}方案详情{% endblock %}
+{% block content %}
+{% if error %}
+<p>{{error}}</p>
+{% else %}
+<div class="row">
+        <p>创建时间： {{created| date:"Y年n月d日 H:i" }} </p>
+        {% if comments %}
+            <table class="table table-bordered">
+                <thead>
+            <tr>
+                <td>材料编号</td>
+                <td>材料名称</td>
+                <td>模型名称</td>
+                <td>模型ID</td>
+                <td>使用数量</td>
+            </tr>
+                </thead>
+            <tbody>
+            {% for data in comments %}
+             <tr>
+                <td>{{data.material_code}}</td>
+                <td>{{data.material_name}}</td>
+                <td>{{data.model_name}}</td>
+                 <td>{{data.model_id}}</td>
+                <td>{{data.amount}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        {% endif %}
+        {% if comment_text %}
+        <p>描述：{{comment_text}} </p>
+        {% endif %}
+</div>
+<hr>
+<div class="clear"></div>
+<div class="row">
+      <table class="table table-bordered table-hover">
+                <thead>
+            <tr>
+                <td>材料编号</td>
+                <td>材料名称</td>
+                <td>单位</td>
+                <td>单价</td>
+                <td>使用长度</td>
+                <td>使用面积</td>
+                <td>总价</td>
+                <td>包含模型</td>
+                <td>排版图片</td>
+            </tr>
+                </thead>
+            <tbody>
+                {%for abin in bin_list %}
+                 <tr>
+                    <td>{{abin.material_code}}</td>
+                    <td>{{abin.material_name}}</td>
+                    <td>{{abin.unit}}</td>
+                    <td>{{abin.price}}</td>
+                    <td>{{abin.use_width}}</td>
+                    <td>{{abin.areas}}</td>
+                    <td>{{abin.total_price}}</td>
+                    <td>{{abin.dxf_models}}</td>
+                    <td><a target="_blank" href="http://{{host}}\{{abin.pic_path}}">打开</a></td>
+                 </tr>
+                {% endfor %}
+            </tbody>
+      </table>
+</div>
+{% endif %}
+
+{% endblock%}

@@ -10,7 +10,7 @@ from sql import material_info
 def data_check(data):
     try:
         # 前端控制输入的字段
-        input_data = json.loads(data['job_data'])
+        input_data = json.loads(data['data'])
         return {'is_error': False, 'data': input_data}
     except:
         return {'is_error': True, 'error_info': u'json结构解析出错'}
@@ -30,8 +30,9 @@ def shape_num(data):
             # TODO: 参数的值合理性判断
             if input_data.get('Guid') and input_data.get('Amount'):
                 dxf_model = DxfModel.objects.filter(model_guid=input_data['Guid']).first()
+                # print 'rotation', dxf_model.rotation
                 if dxf_model:
-                    total_num += len(input_utls.input_polygon(dxf_model.uploads.path)) * input_data['Amount']
+                    total_num += len(input_utls.input_polygon(dxf_model.uploads.path)) * int(input_data['Amount'])
                 else:
                     return {'is_error': True, 'error_info': u'模型{}没有找到'.format(input_data['Guid'])}
             else:
@@ -69,6 +70,9 @@ def shape_use(data):
 
         material_dict = dict()
         for input_data in res['data']:
+            # 确保整形
+            input_data['Amount'] = int(input_data['Amount'])
+
             dxf_model = DxfModel.objects.filter(model_guid=input_data['Guid']).first()
             shapes = input_utls.input_polygon(dxf_model.uploads.path)
 
@@ -83,8 +87,8 @@ def shape_use(data):
                 material_dict[dxf_model.material_guid] = {
                     'model': [dxf_model.id],
                 }
-                if input_data.get('Route') == 1:
-                    # 默认是不旋转图形，1为可以旋转图形
+                if dxf_model.rotation:
+                    # 默认是不旋转图形，True 可以旋转图形
                     material_dict[dxf_model.material_guid]['nesting'] = Nester(border=border, rotations=routing)
                 else:
                     material_dict[dxf_model.material_guid]['nesting'] = Nester(border=border)
@@ -107,7 +111,7 @@ def shape_use(data):
                         BIN_NORMAL[2][1] = material['width']
 
                     # 选择bin, 单位是米==无限长，平方或其他==固定大小的面料
-                    print BIN_NORMAL
+                    #print BIN_NORMAL
                     if material['unit'] == '米':
                         material_dict[dxf_model.material_guid]['nesting'].add_container(BIN_NORMAL, limited=False)
                     else:

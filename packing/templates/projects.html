@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}模板列表{% endblock %}
+{% block content %}
+{% if info %}
+    <p>{{info}}</p>
+{% endif %}
+{% if project_list %}
+    <table class="table">
+        <thead><tr><td>#</td><td>日期</td><td>详细</td></tr></thead>
+        <tbody>
+         {% for project in project_list %}
+        <tr>
+            <td>{{ project.id }}</td><td>{{ project.created }}</td>
+            <td><a href="/product_detail/{{project.id}}"> 打开</a></td>
+        </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+     {% if is_paginated %}
+    <div class="pagination">
+        <span class="page-links">
+            {% if page_obj.has_previous %}
+                <a href="/project?page={{ page_obj.previous_page_number }}">上一页</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+                <a href="/project?page={{ page_obj.next_page_number }}">下一页</a>
+            {% endif %}
+            <span class="page-current">
+                第{{ page_obj.number }}页 ，共{{ page_obj.paginator.num_pages }}页。
+            </span>
+        </span>
+    </div>
+    {%endif%}
+{% else %}
+    <p>没有报告</p>
+{% endif %}
+<hr>
+{% endblock%}

@@ -62,7 +62,6 @@ def input_polygon(dxf_file):
     for i in range(0, len(datas)):
         shapes.append(datas[i])
 
-    print shapes
     return shapes
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="jumbotron">
 <p>计算模型的图形数量</p>
-<p>输入例子:[{"Guid":"8887D88A-FB77-87BA-7777-EDF7777E78CC", "Amount":4},{"Guid":"8887D88A-FB87-87AA-7677-EDF7777E78CC", "Amount":2}]</p>
+<p>输入例子:[{"Guid":"2deb3c09-1c45-4b43-9eb9-9b87f36ab396", "Amount":4}]</p>
 <form method="post" action="{% url 'calc_shape_num' %}">
     {% csrf_token %}
     <textarea rows="4" cols="50" name="job_data" placeholder="json数据">{{ works }}</textarea><br>
@@ -13,12 +13,28 @@
 
 <div class="jumbotron">
 <p>计算模型图像排列用量</p>
-<p>输入例子:[{"Guid":"8887D88A-FB77-87BA-7777-EDF7777E78CC", "Amount":1, "Route":1},{"Guid":"8887D88A-FB87-87AA-7677-EDF7777E78CC", "Amount":1, "Route":0}]</p>
+<p>输入例子:[{"Guid":"5e662fc6-3dfa-494b-8132-2edc8b658814", "Amount":1},{"Guid":"2deb3c09-1c45-4b43-9eb9-9b87f36ab396", "Amount":1}]</p>
 <form method="post" action="{% url 'calc_shape_use' %}">
     {% csrf_token %}
     <textarea rows="4" cols="50" name="job_data" placeholder="json数据">{{ works }}</textarea><br>
     <label>间距：</label><input type="number" name="border" min="0" value="3"/><br/>
     <input type="radio" name="loop" value="primary"/>初级优化<br/>
+    <input type="radio" name="loop" value="middle"/>中级优化<br/>
+    <input type="radio" name="loop" value="high"/>高级优化<br/>
+    <input type="submit" value="提交" />
+</form>
+</div>
+
+<div class="jumbotron">
+<p>V2排列用量</p>
+<form method="post" action="{% url 'shape_use_task' %}">
+    {% csrf_token %}
+    <textarea rows="4" cols="50" name="data" placeholder="json数据">{{ works }}</textarea><br>
+    <p>ex: [{"Guid":"1d64d7a0-00c8-4717-89ad-cb7d13239e12", "Amount":2}] </p>
+    <textarea rows="4" cols="50" name="comment" placeholder="项目描述">{{ works }}</textarea><br>
+    <p>ex: [{"material_code":"31050355","material_name": "JJ401G-3", "model_name": "模板1","amount":2}] </p>
+    <label>间距：</label><input type="number" name="border" min="0" value="3"/><br/>
+    <input type="radio" name="loop" value="primary" checked="checked"/>初级优化<br/>
     <input type="radio" name="loop" value="middle"/>中级优化<br/>
     <input type="radio" name="loop" value="high"/>高级优化<br/>
     <input type="submit" value="提交" />

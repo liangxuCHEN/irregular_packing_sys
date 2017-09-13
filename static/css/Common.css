@@ -1,0 +1,84 @@
+﻿*
+{
+    outline: none;
+}
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, hr, pre, code, form, fieldset, legend, p, blockquote, table, th, tr, td
+{
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+}
+body
+{
+    background: #f6f6f6;
+    color: #333;
+    font-size: 12px;
+    font-family: "Microsoft YaHei" , "SimSun" , Arial;
+}
+img
+{
+    border: none;
+    border-style: none;
+}
+a:focus
+{
+    -moz-outline-style: none;
+    outline: none;
+}
+.wbody{
+     margin-top:0px !important;
+}
+ol, ul, li
+{
+    list-style: none;
+}
+a:hover
+{
+    text-decoration: none;
+}
+a:visited
+{
+    text-decoration: none;
+}
+a:link
+{
+    text-decoration: none;
+}
+a:active
+{
+    text-decoration: none;
+}
+a.backToTop
+{
+     width:60px;
+     height:60px; 
+     background:#eaeaea url(../ref/top.gif) no-repeat -51px 0; 
+     text-indent:-999em;
+}
+a.backToTop:hover
+{
+    background-position:-113px 0;
+}
+#tips_box {
+        display: none;
+        width: 300px;
+        border: 1px solid #333;
+        padding: 12px;
+        text-align: left;
+        text-indent: 2em;
+        position: fixed;
+        z-index: 99999999;
+        background-color: #2dc3e8 !important;
+        color: #fff;
+    }
+#filter-container
+{
+    padding-bottom:5px;
+    padding-top:5px;
+}
+.index-sidebar-menu-add
+{
+    overflow:auto;
+    overflow-x:hidden;
+}

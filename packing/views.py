@@ -13,7 +13,7 @@ from packing.forms import DxfForm
 
 from packing.no_fit_polygon.tools import input_utls
 from packing.no_fit_polygon.nfp_tools import shape_num, shape_use
-from tasks.package import PackingTask
+from tasks.irregular_package import PackingTask
 from packing.no_fit_polygon.sql import jobs_list
 
 from mrq.job import queue_job, Job
@@ -150,9 +150,9 @@ def shape_use_task(request):
     if request.method == 'POST':
         taskparams = dict()
         taskparams['post_data'] = request.POST
-        job_id = queue_job("tasks.package.PackingTask", taskparams)
+        job_id = queue_job("tasks.irregular.PackingTask", taskparams)
         print job_id
-        response = HttpResponse(json.dumps({'job_id': str(job_id)}), content_type="application/json" )
+        response = HttpResponse(json.dumps({'job_id': str(job_id)}), content_type="application/json")
     else:
         response = render(request, 'calc_shape.html')
 

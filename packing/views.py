@@ -150,7 +150,7 @@ def shape_use_task(request):
     if request.method == 'POST':
         taskparams = dict()
         taskparams['post_data'] = request.POST
-        job_id = queue_job("tasks.irregular.PackingTask", taskparams)
+        job_id = queue_job("tasks.irregular_package.PackingTask", taskparams)
         print job_id
         response = HttpResponse(json.dumps({'job_id': str(job_id)}), content_type="application/json")
     else:

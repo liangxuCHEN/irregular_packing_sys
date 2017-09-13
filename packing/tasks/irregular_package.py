@@ -1,7 +1,7 @@
 # encoding=utf-8
 import sys
-sys.path.append("/home/louis/irregular_packing_sys")
-#sys.path.append("/home/django/irregular_packing_sys")
+#sys.path.append("/home/louis/irregular_packing_sys")
+sys.path.append("/home/django/irregular_packing_sys")
 
 import json
 import os
@@ -14,8 +14,8 @@ from mrq.context import run_task, log
 from mrq.job import queue_job, get_job_result
 
 FINISH_STATUS = u'运算结束'
-HOST_URL = 'http://192.168.126.129:8585'
-#HOST_URL = 'http://192.168.3.172:8585'
+#HOST_URL = 'http://192.168.126.129:8585'
+HOST_URL = 'http://192.168.3.172:8585'
 
 
 def wait_for_job(path, params, **kwargs):

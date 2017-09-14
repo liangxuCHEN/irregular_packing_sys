@@ -1,12 +1,14 @@
 ## 异形排列
 
 添加模型
+
 ```
 POST /add_dxf_model
 {
  'name': '模型名字',
  'model_guid': '模型名字',
  'material_guid': '模型名字',
+ 'rotation': '是否可以旋转'
  'uploads': 'dxf 文档'  //注意： 他们软件生成的dxf文档不能直接用，
  //需要用CAD打开，按ctrl+A（全选所有），按 x ，按回车，
  //然后再全选所有，按x, 按回车，然后再保存。 这样的dxf文档程序才能识别
@@ -24,7 +26,7 @@ POST /add_dxf_model
 }
 添加模型返回
 {
-    "data": {"total_num": 54}  //模型包含的图案数量
+    "data": {"total_num": 5}  //模型包含的图案数量
 }
 ```
 
@@ -33,17 +35,24 @@ POST /add_dxf_model
 ```
 POST /calc_shape_use
 
-job_data = [
-    {
+[
+    'data': '[{  //需要排列的模型数据
         "Guid":"模型Guid",
         "Amount":1, //模型的数量
-        "Route":1   // 1 = 可以旋转
     },
     {
         "Guid":"8887D88A-FB87-87AA-7677-EDF7777E78CC",
         "Amount":1,
-        "Route":0
-    }
+    }]'
+    'comment': '[{   //项目描述
+        "name":"模型名字",
+        "amount":1, //模型的数量
+        "material_name": "材料名称",
+        "material_code": "材料skucode",
+        "model_id": "模型的ID",
+    }]'
+    'border': 5, //排列的间隔
+    'loop': primary, middle, high  //优化的次数
 ]
 
 返回结果
@@ -65,4 +74,3 @@ job_data = [
     }
 }
 ```
-

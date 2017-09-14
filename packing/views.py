@@ -13,10 +13,10 @@ from packing.forms import DxfForm
 
 from packing.no_fit_polygon.tools import input_utls
 from packing.no_fit_polygon.nfp_tools import shape_num, shape_use
-from tasks.irregular_package import PackingTask
+#from tasks.irregular_package import PackingTask
 from packing.no_fit_polygon.sql import jobs_list
 
-from mrq.job import queue_job, Job
+#from mrq.job import queue_job, Job
 
 
 def allow_all(response):
@@ -66,6 +66,9 @@ def dxf_json(request):
 def add_dxf_model(request):
     if request.method == 'POST':
         form = DxfForm(request.POST, request.FILES)
+        content = {
+            'form': form
+        }
         if form.is_valid():
             dxf_model = form.save()
             try:
@@ -81,19 +84,20 @@ def add_dxf_model(request):
                 }, ensure_ascii=False)
                 response = HttpResponse(content, content_type="application/json")
             except:
-                response = HttpResponse(json.dumps({'info': u'读取文件出错'}), content_type="application/json")
+                dxf_model.delete()
+                content['info'] = u'上传的文件不符合格式，请确保是DXF文件，并且是炸开为线段，从设备导出的DXF是不能直接使用'
+                response = render(request, 'add_dxf_model.html', content)
+                # response = HttpResponse(json.dumps({'info': '读取文件出错'}), content_type="application/json")
         else:
-            print form.errors
-            response = render(request, 'add_dxf_model.html', {'info': u'缺少文件'})
+            # response = render(request, 'add_dxf_model.html', {'info': u'缺少文件'})
+            content['info'] = u'缺少文件'
+            response = render(request, 'add_dxf_model.html', content)
     else:
-        form = DxfForm(initial={
-            "material_guid":  request.GET.get('material_guid'),
-            'model_guid': request.GET.get('model_guid')
-        })
-        content = {
-            'form': form
-        }
-        response = render(request, 'add_dxf_model.html', content)
+        # form = DxfForm(initial={
+        #     "material_guid":  request.GET.get('material_guid'),
+        #     'model_guid': request.GET.get('model_guid')
+        # })
+        response = render(request, 'add_dxf_model.html', {'form': DxfForm()})
 
     return response
 
